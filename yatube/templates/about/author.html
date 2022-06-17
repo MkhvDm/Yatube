@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %} {{ title }} {% endblock %}
+{% block content %}
+    <h2>Привет, я Михеев Дима</h2>
+
+    <p>Меня можно найти здесь:</p>
+    <ul>
+    {% for source, link in links.items %}
+        <li><a href="{{ link }}">{{ source }}</a></li>
+    {% endfor %}
+    </ul>
+
+{% endblock %}

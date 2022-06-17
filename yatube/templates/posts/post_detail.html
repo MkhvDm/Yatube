@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load thumbnail %}
+
+{% block title %}
+  Пост {{ post.text|linebreaksbr|truncatechars:30 }}
+{% endblock %}
+
+{% block content %}
+
+<div class="row">
+  {% load user_filters %}
+  <aside class="col-12 col-md-3">
+    <ul class="list-group list-group-flush">
+
+      <li class="list-group-item">
+        Дата публикации: {{ post.pub_date|date:"d E Y" }}
+      </li>
+
+      {% with group=post.group %}
+        {% if group %}
+          <li class="list-group-item">
+            Группа:
+            <a href="{% url 'posts:group_list' group.slug %}">
+              "{{ group.title }}"
+            </a>
+          </li>
+        {% endif %}
+      {% endwith %}
+
+      <li class="list-group-item">
+        Автор: {{ post.author.get_full_name }}
+      </li>
+
+      <li class="list-group-item">
+        <a href="{% url 'posts:profile' post.author.username %}">
+          У автора {{ num_posts }} {{ num_posts|pluralize_ru:"публикация, публикации, публикаций" }}
+        </a>
+      </li>
+      {% if request.user == post.author %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <a title="Редактировать" href="{% url 'posts:post_edit' post.id %}">
+            <img src="{% static 'img/buttons/edit.png' %}"
+                 alt="Редактировать"
+                 style="width:42px;height:42px;">
+        </a>
+        <span>
+          <a title="Удалить" href="{% url 'posts:post_delete' post.id %}">
+            <img src="{% static 'img/buttons/delete.png' %}"
+                 alt="Удалить"
+                 style="width:42px;height:42px;">
+          </a>
+        </span>
+      </li>
+      {% endif %}
+
+    </ul>
+  </aside>
+
+  <article class="col-12 col-md-9">
+    {% thumbnail post.image "960x339" crop="center" upscale=True as im %}
+      <img class="card-img my-2" src="{{ im.url }}">
+    {% endthumbnail %}
+    <p>{{ post.text|linebreaksbr }}</p>
+  {% include 'posts/includes/comments.html' %}
+  </article>
+</div>
+{% endblock %}
