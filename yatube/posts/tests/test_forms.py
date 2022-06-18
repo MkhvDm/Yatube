@@ -32,7 +32,7 @@ class PostFormTests(TestCase):
 
     def setUp(self) -> None:
         self.author_client = Client()
-        self.author_client.force_login(PostFormTests.user_author)
+        self.author_client.force_login(self.user_author)
 
         self.post_count = Post.objects.count()
         small_gif = (
@@ -50,7 +50,7 @@ class PostFormTests(TestCase):
         )
         self.form_data = {
             'text': 'Тестовый текст',
-            'group': PostFormTests.group_test.id,
+            'group': self.group_test.id,
             'image': uploaded,
         }
         self.response = self.author_client.post(
@@ -63,12 +63,12 @@ class PostFormTests(TestCase):
         """Новая запись успешно создаётся через форму."""
         self.assertRedirects(self.response, reverse(
             'posts:profile',
-            kwargs={'username': PostFormTests.user_author.username}))
+            kwargs={'username': self.user_author}))
         self.assertEqual(Post.objects.count(), self.post_count + 1)
         self.assertTrue(Post.objects.filter(
-            text='Тестовый текст',
-            author=PostFormTests.user_author,
-            group=PostFormTests.group_test,
+            text=self.form_data['text'],
+            author=self.user_author,
+            group=self.group_test,
             image='posts/small.gif'
         ).exists())
 
@@ -90,7 +90,7 @@ class PostFormTests(TestCase):
         )
         edit_form_data = {
             'text': 'Обновлённый текст',
-            'group': '',  # crutch? equal None
+            'group': '',  # equal None
             'image': uploaded_upd,
         }
         edit_response = self.author_client.post(
@@ -103,7 +103,7 @@ class PostFormTests(TestCase):
         ))
         self.assertTrue(Post.objects.filter(
             text='Обновлённый текст',
-            author=PostFormTests.user_author,
+            author=self.user_author,
             group=None,
             image='posts/small_upd.gif'
         ).exists())
@@ -118,13 +118,13 @@ class CommentFormTest(TestCase):
 
     def setUp(self) -> None:
         self.author_client = Client()
-        self.author_client.force_login(CommentFormTest.user_author)
+        self.author_client.force_login(self.user_author)
 
         self.commentator_client = Client()
-        self.commentator_client.force_login(CommentFormTest.user_commentator)
+        self.commentator_client.force_login(self.user_commentator)
 
         self.test_post = Post.objects.create(
-            author=CommentFormTest.user_author,
+            author=self.user_author,
             text='Пост для коммента'
         )
 
@@ -136,16 +136,17 @@ class CommentFormTest(TestCase):
         }
         response = self.commentator_client.post(
             reverse('posts:add_comment',
-                    kwargs={'post_id': self.test_post.id}),
+                    kwargs={'post_id': self.test_post.pk}),
             data=form_comment,
             follow=True
         )
-        self.assertRedirects(response,
-                             reverse('posts:post_detail',
-                                     kwargs={'post_id': self.test_post.id}))
+        self.assertRedirects(
+            response,
+            reverse('posts:post_detail', kwargs={'post_id': self.test_post.pk})
+        )
         self.assertEqual(Comment.objects.count(), comment_count + 1)
         self.assertTrue(Comment.objects.filter(
-            post=self.test_post.id,
-            text='Текст комментария',
-            author=CommentFormTest.user_commentator
+            post=self.test_post.pk,
+            text=form_comment['text'],
+            author=self.user_commentator
         ).exists())

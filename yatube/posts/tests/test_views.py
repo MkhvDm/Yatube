@@ -70,39 +70,34 @@ class PostViewsTests(TestCase):
         self.guest_client = Client()
 
         self.author_client = Client()
-        self.author_client.force_login(PostViewsTests.user_author)
+        self.author_client.force_login(self.user_author)
 
         self.author_too_client = Client()
-        self.author_too_client.force_login(PostViewsTests.user_author_too)
+        self.author_too_client.force_login(self.user_author_too)
         cache.clear()
 
     def test_pages_uses_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""
-        cache.clear()
         templates_page_names = {
             reverse('posts:index'):
                 'posts/index.html',
-            reverse('posts:group_list',
-                    kwargs={'slug': 'test-group-slug-0'}):
+            reverse('posts:group_list', kwargs={'slug': self.groups[0].slug}):
                 'posts/group_list.html',
-            reverse('posts:profile',
-                    kwargs={'username': PostViewsTests.user_author}):
+            reverse('posts:profile', kwargs={'username': self.user_author}):
                 'posts/profile.html',
-            reverse('posts:post_detail',
-                    kwargs={'post_id': 1}):
+            reverse('posts:post_detail', kwargs={'post_id': self.posts[0].pk}):
                 'posts/post_detail.html',
-            reverse('posts:post_edit',
-                    kwargs={'post_id': 1}):
+            reverse('posts:post_edit', kwargs={'post_id': self.posts[0].pk}):
                 'posts/create_post.html',
             reverse('posts:post_create'):
                 'posts/create_post.html',
             reverse('posts:follow_index'):
                 'posts/follow.html',
             reverse('posts:profile_follow',
-                    kwargs={'username': 'Im_author_too'}):
+                    kwargs={'username': self.user_author_too}):
                 'posts/profile.html',
             reverse('posts:profile_unfollow',
-                    kwargs={'username': 'Im_author_too'}):
+                    kwargs={'username': self.user_author_too}):
                 'posts/profile.html',
         }
         for reverse_name, template in templates_page_names.items():
@@ -113,12 +108,10 @@ class PostViewsTests(TestCase):
     # index testing:
     def test_index_context_types(self):
         """В контекст index'а передаются объекты верных типов."""
-        cache.clear()
         response = self.guest_client.get(reverse('posts:index'))
         expected_types = {
             'title': str,
-            'page_obj': Page,
-            'group_link_is_visible': bool
+            'page_obj': Page
         }
         for context_key, context_type in expected_types.items():
             with self.subTest(context_key=context_key):
@@ -128,7 +121,6 @@ class PostViewsTests(TestCase):
 
     def test_index_page_1_context(self):
         """Число постов на 1 странице index равно N (default: 10)."""
-        cache.clear()
         response = self.guest_client.get(reverse('posts:index'))
         self.assertEqual(
             len(response.context['page_obj']),
@@ -136,7 +128,7 @@ class PostViewsTests(TestCase):
 
     def test_index_last_page_context(self):
         """На последней странице index верное число постов %N."""
-        n_posts = PostViewsTests.num_of_test_posts
+        n_posts = self.num_of_test_posts
         posts_on_page = settings.NUM_OF_POSTS_ON_PAGE
         last_page_num = (n_posts + (posts_on_page - 1)) // posts_on_page
         expected_last_page_posts_num = (
@@ -154,12 +146,12 @@ class PostViewsTests(TestCase):
     def test_group_context_types(self):
         """В контекст group_list'а передаются объекты верных типов."""
         response = self.guest_client.get(
-            reverse('posts:group_list', kwargs={'slug': 'test-group-slug-0'})
+            reverse('posts:group_list', kwargs={'slug': self.groups[0].slug})
         )
         expected_types = {
             'group': Group,
             'page_obj': Page,
-            'group_link_is_visible': bool
+            'group_page': bool
         }
         for context_key, context_type in expected_types.items():
             with self.subTest(context_key=context_key):
@@ -170,16 +162,16 @@ class PostViewsTests(TestCase):
     def test_correct_group_selecting(self):
         """На странице group_list посты только определённой группы."""
         response = self.guest_client.get(
-            reverse('posts:group_list', kwargs={'slug': 'test-group-slug-0'})
+            reverse('posts:group_list', kwargs={'slug': self.groups[0].slug})
         )
         for post in response.context['page_obj']:
             with self.subTest(post=post):
-                self.assertEqual(post.group.slug, 'test-group-slug-0')
+                self.assertEqual(post.group.slug, self.groups[0].slug)
 
     def test_group_page_1_context(self):
         """Число постов на 1 странице group_list равно N (default: 10)."""
         response = self.guest_client.get(
-            reverse('posts:group_list', kwargs={'slug': 'test-group-slug-0'})
+            reverse('posts:group_list', kwargs={'slug': self.groups[0].slug})
         )
         self.assertEqual(
             len(response.context['page_obj']),
@@ -188,9 +180,8 @@ class PostViewsTests(TestCase):
 
     def test_group_last_page_context(self):
         """На последней странице group_list верное число постов."""
-        group_id = 0
-        n_posts = PostViewsTests.num_of_test_posts
-        n_groups = PostViewsTests.num_of_test_groups
+        n_posts = self.num_of_test_posts
+        n_groups = self.num_of_test_groups
         posts_on_page = settings.NUM_OF_POSTS_ON_PAGE
 
         n_group_posts = (n_posts + (n_groups - 1)) // n_groups
@@ -203,7 +194,7 @@ class PostViewsTests(TestCase):
         response = self.guest_client.get(
             reverse(
                 'posts:group_list',
-                kwargs={'slug': f'test-group-slug-{group_id}'}
+                kwargs={'slug': self.groups[0].slug}
             ) + f'?page={last_page_num}')
 
         self.assertEqual(
@@ -222,13 +213,12 @@ class PostViewsTests(TestCase):
     def test_profile_context_types(self):
         """В контекст profile'а передаются объекты верных типов."""
         response = self.guest_client.get(
-            reverse('posts:profile', kwargs={'username': 'Im_author'})
+            reverse('posts:profile', kwargs={'username': self.user_author})
         )
         expected_types = {
             'page_obj': Page,
             'author': User,
-            'following': bool,
-            'group_link_is_visible': bool
+            'following': bool
         }
         for context_key, context_type in expected_types.items():
             with self.subTest(context_key=context_key):
@@ -239,16 +229,16 @@ class PostViewsTests(TestCase):
     def test_correct_profile_selecting(self):
         """На странице profile посты только определённого автора."""
         response = self.guest_client.get(
-            reverse('posts:profile', kwargs={'username': 'Im_author'})
+            reverse('posts:profile', kwargs={'username': self.user_author})
         )
         for post in response.context['page_obj']:
             with self.subTest(post=post):
-                self.assertEqual(post.author.username, 'Im_author')
+                self.assertEqual(post.author, self.user_author)
 
     def test_profile_page_1_context(self):
         """Число постов на 1 странице profile равно N (default: 10)."""
         response = self.guest_client.get(
-            reverse('posts:profile', kwargs={'username': 'Im_author'})
+            reverse('posts:profile', kwargs={'username': self.user_author})
         )
         self.assertEqual(len(response.context['page_obj']),
                          settings.NUM_OF_POSTS_ON_PAGE
@@ -256,7 +246,7 @@ class PostViewsTests(TestCase):
 
     def test_profile_last_page_context(self):
         """На последней странице profile верное число постов."""
-        n_posts = PostViewsTests.num_of_test_posts
+        n_posts = self.num_of_test_posts
         posts_on_page = settings.NUM_OF_POSTS_ON_PAGE
         n_author_posts = (n_posts // 2) + 1 if n_posts % 2 else n_posts // 2
         last_page_num = (n_author_posts + (posts_on_page - 1)) // posts_on_page
@@ -266,7 +256,7 @@ class PostViewsTests(TestCase):
             else n_author_posts % posts_on_page
         )
         response = self.guest_client.get(
-            reverse('posts:profile', kwargs={'username': 'Im_author'})
+            reverse('posts:profile', kwargs={'username': self.user_author})
             + f'?page={last_page_num}')
         self.assertEqual(
             len(response.context['page_obj']),
@@ -276,7 +266,7 @@ class PostViewsTests(TestCase):
     def test_post_detail_context_types(self):
         """В контекст post_detail'а передаются объекты верных типов."""
         response = self.guest_client.get(
-            reverse('posts:post_detail', kwargs={'post_id': 1})
+            reverse('posts:post_detail', kwargs={'post_id': self.posts[0].pk})
         )
         expected_types = {'post': Post,
                           'num_posts': int,
@@ -291,14 +281,15 @@ class PostViewsTests(TestCase):
 
     def test_correct_post_detail_selecting(self):
         """На странице post_detail верный пост."""
+        test_post = self.posts[0]
         response = self.guest_client.get(
-            reverse('posts:post_detail', kwargs={'post_id': 1})
+            reverse('posts:post_detail', kwargs={'post_id': test_post.pk})
         )
         expected_post = {
-            'id': 1,
-            'author': 1,  # author_id
-            'group': 1,
-            'text': 'Тестовый пост 0'
+            'id': test_post.pk,
+            'author': test_post.author.pk,
+            'group': test_post.group.pk,
+            'text': test_post.text
         }
         for field, value in expected_post.items():
             with self.subTest(field=field):
@@ -309,34 +300,43 @@ class PostViewsTests(TestCase):
     def test_correct_num_of_authors_posts(self):
         """На странице post_detail выводится верное число постов автора."""
         # for author = 'Im_author'
-        n_posts = PostViewsTests.num_of_test_posts
+        n_posts = self.num_of_test_posts
         n_author_posts = (n_posts // 2) + 1 if n_posts % 2 else n_posts // 2
         response = self.guest_client.get(
-            reverse('posts:post_detail', kwargs={'post_id': 1})
+            reverse('posts:post_detail', kwargs={'post_id': self.posts[0].pk})
         )
         self.assertEqual(response.context.get('num_posts'), n_author_posts)
 
     def test_add_comment_no_auth(self):
         """Переадресация на login при попытке комментировать."""
-        comment_url = reverse('posts:add_comment', kwargs={'post_id': 1})
+        comment_url = reverse('posts:add_comment',
+                              kwargs={'post_id': self.posts[0].pk})
         response = self.guest_client.get(comment_url)
         self.assertRedirects(response,
                              reverse('users:login') + f'?next={comment_url}')
 
     def test_add_comment(self):
         """На странице поста верный комментарий."""
-        post_id = 1
+        test_post = self.posts[0]
         comment = Comment.objects.create(
-            post=PostViewsTests.posts[post_id - 1],
-            author=PostViewsTests.user_author_too,
+            post=test_post,
+            author=self.user_author_too,
             text='Текст комментария'
         )
         response = self.guest_client.get(
-            reverse('posts:post_detail', kwargs={'post_id': post_id})
+            reverse('posts:post_detail', kwargs={'post_id': test_post.pk})
         )
         self.assertEqual(response.context['comments'][0], comment)
 
-    def test_unexisting_post(self):
+    def test_comment_nonexistent_post(self):
+        """При комментировании несуществующего поста - ошибка 404."""
+        response = self.author_client.get(
+            reverse('posts:add_comment', kwargs={'post_id': 666}),
+            follow=True
+        )
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+    def test_nonexistent_post(self):
         """На запрос несуществующего поста возвращается ошибка 404."""
         response = self.guest_client.get(
             reverse('posts:post_detail', kwargs={'post_id': 666}),
@@ -348,7 +348,7 @@ class PostViewsTests(TestCase):
     def test_post_edit_context_types(self):
         """В контекст post_edit передаются объекты верных типов."""
         response = self.author_client.get(
-            reverse('posts:post_edit', kwargs={'post_id': 1})
+            reverse('posts:post_edit', kwargs={'post_id': self.posts[0].pk})
         )
         expected_types = {
             'post_id': int,
@@ -364,11 +364,11 @@ class PostViewsTests(TestCase):
     def test_post_edit_form(self):
         """Проверка полей формы редактирования поста."""
         response_form = self.author_client.get(
-            reverse('posts:post_edit', kwargs={'post_id': 1})
+            reverse('posts:post_edit', kwargs={'post_id': self.posts[0].pk})
         ).context.get('form')
         form_fields = {
-            'text': (forms.fields.CharField, 'Тестовый пост 0'),
-            'group': (forms.models.ModelChoiceField, 1),
+            'text': (forms.fields.CharField, self.posts[0].text),
+            'group': (forms.models.ModelChoiceField, self.posts[0].group.pk),
         }
         for value, expected in form_fields.items():
             with self.subTest(value=value):
@@ -380,10 +380,13 @@ class PostViewsTests(TestCase):
     def test_post_edit_redirect(self):
         """Не автор поста перенаправляется на страницу поста."""
         response = self.author_too_client.get(
-            reverse('posts:post_edit', kwargs={'post_id': 1}), follow=True
+            reverse('posts:post_edit', kwargs={'post_id': self.posts[0].pk}),
+            follow=True
         )
-        self.assertRedirects(response, reverse('posts:post_detail',
-                                               kwargs={'post_id': 1}))
+        self.assertRedirects(
+            response,
+            reverse('posts:post_detail', kwargs={'post_id': self.posts[0].pk})
+        )
 
     # post_create testing:
     def test_post_create_context_types(self):
@@ -400,16 +403,15 @@ class PostViewsTests(TestCase):
 
     def test_post_create_correct_on_paginated_pages(self):
         """При создании поста он появляется на главной, в группе, в профиле."""
-        cache.clear()
         new_post = Post.objects.create(
-            author=PostViewsTests.user_author,
+            author=self.user_author,
             text='Пост с группой 0',
-            group=PostViewsTests.groups[0]
+            group=self.groups[0]
         )
         urls_names = (
             reverse('posts:index'),
-            reverse('posts:group_list', kwargs={'slug': 'test-group-slug-0'}),
-            reverse('posts:profile', kwargs={'username': 'Im_author'})
+            reverse('posts:group_list', kwargs={'slug': self.groups[0].slug}),
+            reverse('posts:profile', kwargs={'username': self.user_author})
         )
         for url in urls_names:
             with self.subTest(url=url):
@@ -419,7 +421,7 @@ class PostViewsTests(TestCase):
 
         last_post_in_other_group = self.author_client.get(
             reverse('posts:group_list',
-                    kwargs={'slug': 'test-group-slug-1'}
+                    kwargs={'slug': self.groups[1].slug}
                     )).context['page_obj'][0]
         self.assertNotEqual(last_post_in_other_group, new_post,
                             'Пост не должен появиться на странице этой группы!'
@@ -429,10 +431,13 @@ class PostViewsTests(TestCase):
     def test_post_delete_not_author_redirect(self):
         """Не автор поста перенаправляется на страницу поста."""
         response = self.author_too_client.get(
-            reverse('posts:post_delete', kwargs={'post_id': 1}), follow=True
+            reverse('posts:post_delete', kwargs={'post_id': self.posts[0].pk}),
+            follow=True
         )
-        self.assertRedirects(response, reverse('posts:post_detail',
-                                               kwargs={'post_id': 1}))
+        self.assertRedirects(
+            response,
+            reverse('posts:post_detail', kwargs={'post_id': self.posts[0].pk})
+        )
 
     def test_unexist_post_delete_redirect(self):
         """При удалении несуществующего поста возвращается ошибка 404."""
@@ -445,13 +450,14 @@ class PostViewsTests(TestCase):
         """Проверка корректного удаления поста."""
         num_of_posts_before = Post.objects.count()
         Post.objects.create(
-            author=PostViewsTests.authors[0],
+            author=self.authors[0],
             text='Тестовый пост для удаления'
         )
         post = Post.objects.filter(text='Тестовый пост для удаления').get()
         response = self.author_client.get(
             reverse('posts:post_delete', kwargs={'post_id': post.id}),
-            follow=True)
+            follow=True
+        )
         self.assertRedirects(response, reverse('posts:index'))
         num_of_posts_after = Post.objects.count()
         self.assertEqual(num_of_posts_before, num_of_posts_after)
@@ -459,8 +465,7 @@ class PostViewsTests(TestCase):
     # PIC tests:
     def test_pic_in_all_views(self):
         """Картинка верно передаётся по всем адресам."""
-        cache.clear()
-        last_post = Post.objects.get(id=PostViewsTests.num_of_test_posts)
+        last_post = Post.objects.get(id=self.num_of_test_posts)
         urls_context_obj = {
             reverse('posts:index'): 'page_obj',
             reverse('posts:profile',
@@ -478,14 +483,13 @@ class PostViewsTests(TestCase):
                     context_image = post_or_posts.image
                 else:
                     context_image = post_or_posts[0].image
-                self.assertEqual(context_image, PostViewsTests.uploaded)
+                self.assertEqual(context_image, self.uploaded)
 
     # cache testing:
     def test_cache(self):
         """Загрузка из кэша доступна в течение заданого времени."""
-        cache.clear()
         Post.objects.create(
-            author=PostViewsTests.authors[0],
+            author=self.authors[0],
             text='Тестовый пост для кэширования'
         )
         response_fill_cache = self.guest_client.get(reverse('posts:index'))
@@ -502,8 +506,7 @@ class PostViewsTests(TestCase):
         """В контекст follow_index передаются объекты верных типов."""
         response = self.author_client.get(reverse('posts:follow_index'))
         expected_types = {
-            'page_obj': Page,
-            'group_link_is_visible': bool
+            'page_obj': Page
         }
         for context_key, context_type in expected_types.items():
             with self.subTest(context_key=context_key):
@@ -512,30 +515,32 @@ class PostViewsTests(TestCase):
 
     def test_follow_n_unfollow(self):
         """Пользователь может подписаться на автора и отписаться."""
-        author = 'Im_author_too'
+        test_author = self.user_author_too
+        test_follower = self.user_author
         resp_follow = self.author_client.get(
-            reverse('posts:profile_follow', kwargs={'username': author})
+            reverse('posts:profile_follow', kwargs={'username': test_author})
         )
         self.assertRedirects(
-            resp_follow, reverse('posts:profile', kwargs={'username': author})
+            resp_follow,
+            reverse('posts:profile', kwargs={'username': test_author})
         )
         self.assertTrue(
             Follow.objects.filter(
-                user=PostViewsTests.authors[0],
-                author=PostViewsTests.authors[1]
+                user=test_follower,
+                author=test_author
             ).exists()
         )
         resp_unfollow = self.author_client.get(
-            reverse('posts:profile_unfollow', kwargs={'username': author})
+            reverse('posts:profile_unfollow', kwargs={'username': test_author})
         )
         self.assertRedirects(
             resp_unfollow,
-            reverse('posts:profile', kwargs={'username': author})
+            reverse('posts:profile', kwargs={'username': test_author})
         )
         self.assertFalse(
             Follow.objects.filter(
-                user=PostViewsTests.authors[0],
-                author=PostViewsTests.authors[1]
+                user=test_follower,
+                author=test_author
             ).exists()
         )
 
@@ -545,16 +550,16 @@ class PostViewsTests(TestCase):
         self.tester_client = Client()
         self.tester_client.force_login(test_user)
         Follow.objects.create(
-            user=test_user, author=PostViewsTests.authors[0]
+            user=test_user, author=self.user_author
         )
         follow_resp = self.tester_client.get(reverse('posts:follow_index'))
         for post in follow_resp.context['page_obj']:
             with self.subTest(post=post):
-                self.assertEqual(post.author.username, 'Im_author')
+                self.assertEqual(post.author, self.user_author)
 
         non_follow_resp = self.author_too_client.get(
             reverse('posts:follow_index')
         )
         for post in non_follow_resp.context['page_obj']:
             with self.subTest(post=post):
-                self.assertNotEqual(post.author.username, 'Im_author')
+                self.assertNotEqual(post.author, self.user_author)

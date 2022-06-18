@@ -19,11 +19,11 @@ class PostModelTest(TestCase):
 
     def test_post_have_correct_objects_name(self):
         """Проверяем, что у модели Post корректно работает __str__."""
-        expected_obj_name = PostModelTest.post.text[:15]
+        expected_obj_name = self.post.text[:15]
         self.assertEqual(
             expected_obj_name,
-            PostModelTest.post.__str__(),
-            '[!] Метод __str__ у модели Post работает неверно!'
+            self.post.__str__(),
+            '[x] Метод __str__ у модели Post работает неверно!'
         )
 
     def test_post_verbose_names(self):
@@ -38,7 +38,7 @@ class PostModelTest(TestCase):
         for field, expected_verbose_name in field_verboses.items():
             with self.subTest(field=field):
                 self.assertEqual(
-                    PostModelTest.post._meta.get_field(field).verbose_name,
+                    self.post._meta.get_field(field).verbose_name,
                     expected_verbose_name,
                     '[x] Значение verbose_name не соответствует ожидаемому.'
                 )
@@ -52,7 +52,7 @@ class PostModelTest(TestCase):
         for field, expected_help_text in field_help_text.items():
             with self.subTest(field=field):
                 self.assertEqual(
-                    PostModelTest.post._meta.get_field(field).help_text,
+                    self.post._meta.get_field(field).help_text,
                     expected_help_text,
                     '[x] Значение help_text не соответствует ожидаемому.'
                 )
@@ -71,11 +71,11 @@ class GroupModelTest(TestCase):
 
     def test_group_have_correct_objects_name(self):
         """Проверяем, что у модели Group корректно работает __str__."""
-        expected_obj_name = GroupModelTest.group.title
+        expected_obj_name = self.group.title
         self.assertEqual(
             expected_obj_name,
-            str(GroupModelTest.group),
-            '[!] Метод __str__ у модели Group работает неверно!'
+            str(self.group),
+            '[x] Метод __str__ у модели Group работает неверно!'
         )
 
     def test_group_verbose_names(self):
@@ -88,7 +88,7 @@ class GroupModelTest(TestCase):
         for field, expected_verbose_name in field_verboses.items():
             with self.subTest(field=field):
                 self.assertEqual(
-                    GroupModelTest.group._meta.get_field(field).verbose_name,
+                    self.group._meta.get_field(field).verbose_name,
                     expected_verbose_name,
                     '[x] Значение verbose_name не соответствует ожидаемому.'
                 )
@@ -103,7 +103,7 @@ class GroupModelTest(TestCase):
         for field, expected_help_text in field_help_text.items():
             with self.subTest(field=field):
                 self.assertEqual(
-                    GroupModelTest.group._meta.get_field(field).help_text,
+                    self.group._meta.get_field(field).help_text,
                     expected_help_text,
                     '[x] Значение help_text не соответствует ожидаемому.'
                 )
@@ -126,11 +126,11 @@ class CommentModelTest(TestCase):
 
     def test_comment_have_correct_objects_name(self):
         """Проверяем, что у модели Comment корректно работает __str__."""
-        expected_obj_name = CommentModelTest.comment.text[:15]
+        expected_obj_name = self.comment.text[:15]
         self.assertEqual(
             expected_obj_name,
-            str(CommentModelTest.comment),
-            '[!] Метод __str__ у модели Comment работает неверно!'
+            str(self.comment),
+            '[x] Метод __str__ у модели Comment работает неверно!'
         )
 
     def test_comment_verbose_names(self):
@@ -144,8 +144,7 @@ class CommentModelTest(TestCase):
         for field, expected_verbose_name in field_verboses.items():
             with self.subTest(field=field):
                 self.assertEqual(
-                    (CommentModelTest.comment._meta.get_field(field)
-                     .verbose_name),
+                    self.comment._meta.get_field(field).verbose_name,
                     expected_verbose_name,
                     '[x] Значение verbose_name не соответствует ожидаемому.'
                 )
@@ -158,7 +157,7 @@ class CommentModelTest(TestCase):
         for field, expected_help_text in field_help_text.items():
             with self.subTest(field=field):
                 self.assertEqual(
-                    CommentModelTest.comment._meta.get_field(field).help_text,
+                    self.comment._meta.get_field(field).help_text,
                     expected_help_text,
                     '[x] Значение help_text не соответствует ожидаемому.'
                 )
@@ -178,12 +177,11 @@ class FollowModelTest(TestCase):
 
     def test_follow_have_correct_objects_name(self):
         """Проверяем, что у модели Comment корректно работает __str__."""
-        expected_obj_name = (f'{FollowModelTest.user1} подписан на '
-                             f'{FollowModelTest.user2}')
+        expected_obj_name = f'{self.user1} подписан на {self.user2}'
         self.assertEqual(
             expected_obj_name,
-            str(FollowModelTest.follow),
-            '[!] Метод __str__ у модели Follow работает неверно!'
+            str(self.follow),
+            '[x] Метод __str__ у модели Follow работает неверно!'
         )
 
     def test_comment_verbose_names(self):
@@ -195,8 +193,7 @@ class FollowModelTest(TestCase):
         for field, expected_verbose_name in field_verboses.items():
             with self.subTest(field=field):
                 self.assertEqual(
-                    (FollowModelTest.follow._meta.get_field(field)
-                     .verbose_name),
+                    self.follow._meta.get_field(field).verbose_name,
                     expected_verbose_name,
                     '[x] Значение verbose_name не соответствует ожидаемому.'
                 )

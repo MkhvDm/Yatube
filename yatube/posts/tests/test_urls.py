@@ -40,34 +40,38 @@ class PostURLTests(TestCase):
         self.guest_client = Client()
 
         self.author_client = Client()
-        self.author_client.force_login(PostURLTests.user_author)
+        self.author_client.force_login(self.user_author)
 
         self.not_author_client = Client()
-        self.not_author_client.force_login(PostURLTests.user_not_author)
+        self.not_author_client.force_login(self.user_not_author)
         cache.clear()
 
     def test_urls_response(self):
         """Есть ответ по всем url. С авторизацией, если есть требование."""
         urls = [  # (url, auth_require flag)
             (reverse('posts:index'), False),
-            (reverse('posts:group_list', kwargs={'slug': 'test-group-slug'}),
+            (reverse('posts:group_list', kwargs={'slug': self.group.slug}),
              False),
-            (reverse('posts:profile', kwargs={'username': 'Im_author'}),
+            (reverse('posts:profile', kwargs={'username': self.user_author}),
              False),
-            (reverse('posts:post_detail', kwargs={'post_id': 1}),
+            (reverse('posts:post_detail', kwargs={'post_id': self.post.pk}),
              False),
-            (reverse('posts:post_edit', kwargs={'post_id': 1}), True),
+            (reverse('posts:post_edit', kwargs={'post_id': self.post.pk}),
+             True),
             (reverse('posts:post_create'), True),
-            (reverse('posts:add_comment', kwargs={'post_id': 1}), True),
+            (reverse('posts:add_comment', kwargs={'post_id': self.post.pk}),
+             True),
             (reverse('posts:follow_index'), True),
-            (reverse('posts:profile_follow', kwargs={'username': 'Im_author'}),
+            (reverse('posts:profile_follow',
+                     kwargs={'username': self.user_author}),
              True),
             (reverse('posts:profile_unfollow',
-                     kwargs={'username': 'Im_author'}),
+                     kwargs={'username': self.user_author}),
              True),
         ]
         # delete url must be last:
-        urls += [(reverse('posts:post_delete', kwargs={'post_id': 1}), True)]
+        urls += [(reverse('posts:post_delete',
+                          kwargs={'post_id': self.post.pk}), True)]
         for url, auth_requiring in urls:
             with self.subTest(url=url):
                 client = (self.author_client if auth_requiring
@@ -80,13 +84,13 @@ class PostURLTests(TestCase):
         """Проверка переадресации на страницах, требующих авторизации."""
         redirect_url_param = '/auth/login/?next='
         urls = [
-            '/posts/1/edit/',
+            f'/posts/{self.post.pk}/edit/',
             '/create/',
-            '/posts/1/delete/',
-            '/posts/1/comment/',
+            f'/posts/{self.post.pk}/delete/',
+            f'/posts/{self.post.pk}/comment/',
             '/follow/',
-            '/profile/Im_author/follow/',
-            '/profile/Im_author/unfollow/',
+            f'/profile/{self.user_author}/follow/',
+            f'/profile/{self.user_author}/unfollow/',
         ]
         for url in urls:
             with self.subTest(url=url):
@@ -96,8 +100,8 @@ class PostURLTests(TestCase):
     def test_redirect_author_required_urls(self):
         """Проверка переадресации, требующих авторства."""
         urls_trace = {
-            '/posts/1/edit/': '/posts/1/',
-            '/posts/1/delete/': '/posts/1/',
+            f'/posts/{self.post.pk}/edit/': f'/posts/{self.post.pk}/',
+            f'/posts/{self.post.pk}/delete/': f'/posts/{self.post.pk}/',
         }
         for url, redirect_url in urls_trace.items():
             with self.subTest(url=url):
@@ -108,14 +112,14 @@ class PostURLTests(TestCase):
         """Тест, что URL-адрес использует соответствующий шаблон."""
         url_templates = {
             '/': 'posts/index.html',
-            '/group/test-group-slug/': 'posts/group_list.html',
-            '/profile/Im_author/': 'posts/profile.html',
-            '/posts/1/': 'posts/post_detail.html',
-            '/posts/1/edit/': 'posts/create_post.html',
+            f'/group/{self.group.slug}/': 'posts/group_list.html',
+            f'/profile/{self.user_author}/': 'posts/profile.html',
+            f'/posts/{self.post.pk}/': 'posts/post_detail.html',
+            f'/posts/{self.post.pk}/edit/': 'posts/create_post.html',
             '/create/': 'posts/create_post.html',
             '/follow/': 'posts/follow.html',
-            '/profile/Im_author/follow/': 'posts/profile.html',
-            '/profile/Im_author/unfollow/': 'posts/profile.html',
+            f'/profile/{self.user_author}/follow/': 'posts/profile.html',
+            f'/profile/{self.user_author}/unfollow/': 'posts/profile.html',
         }
         for url, template in url_templates.items():
             with self.subTest(url=url):

@@ -5,11 +5,6 @@ User = get_user_model()
 
 
 class CoreViewsTests(TestCase):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.user_author = User.objects.create(username='Im_author')
-
     def setUp(self) -> None:
         self.guest_client = Client()
 

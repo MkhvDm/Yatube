@@ -20,8 +20,7 @@ def index(request):
     page_obj = paginated_posts.get_page(request.GET.get('page'))
     return render(request, 'posts/index.html',
                   {'title': 'Добро пожаловать в yaTube',
-                   'page_obj': page_obj,
-                   'group_link_is_visible': True})
+                   'page_obj': page_obj})
 
 
 def profile(request, username):
@@ -40,8 +39,7 @@ def profile(request, username):
     context = {
         'page_obj': page_obj,
         'author': author,
-        'following': following,
-        'group_link_is_visible': True
+        'following': following
     }
     return render(request, 'posts/profile.html', context)
 
@@ -71,15 +69,14 @@ def group_posts(request, slug):
     """
     group = get_object_or_404(Group, slug=slug)
     paginated_posts = Paginator(
-        group.posts
-        .select_related('author'),
+        group.posts.select_related('author'),
         settings.NUM_OF_POSTS_ON_PAGE
     )
     page_obj = paginated_posts.get_page(request.GET.get('page'))
     return render(request, 'posts/group_list.html',
                   {'group': group,
                    'page_obj': page_obj,
-                   'group_link_is_visible': False})
+                   'group_page': True})
 
 
 @login_required
@@ -130,11 +127,12 @@ def post_delete(request, post_id):
 @login_required
 def add_comment(request, post_id):
     """Функция добавления комментария к публикации."""
+    post = get_object_or_404(Post, pk=post_id)
     form = CommentForm(request.POST or None)
     if form.is_valid():
         comment = form.save(commit=False)
         comment.author = request.user
-        comment.post = Post.objects.get(id=post_id)
+        comment.post = post
         comment.save()
     return redirect('posts:post_detail', post_id=post_id)
 
@@ -151,9 +149,7 @@ def follow_index(request):
         settings.NUM_OF_POSTS_ON_PAGE
     )
     page_obj = paginated_posts.get_page(request.GET.get('page'))
-    return render(request, 'posts/follow.html',
-                  {'page_obj': page_obj,
-                   'group_link_is_visible': True})
+    return render(request, 'posts/follow.html', {'page_obj': page_obj})
 
 
 @login_required
