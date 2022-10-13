@@ -1,14 +1,38 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %} {{ title }} {% endblock %}
 {% block content %}
-    <h2>Привет, я Михеев Дима</h2>
+    <div class="container py-5">
+      <div class="row">
+        <div class="col">
+          <img class="card-img my-2"
+           src="{% static 'img/about/me_H591px.jpg' %}"
+           style="width:443px;height:591px;">
+        </div>
+        <div class="col">
+          <h2>Привет, я Михеев Дима</h2>
+          <p>В основном, я занимаюсь FPGA-разработкой, но параллельно изучаю
+            Python и web-фреймворк Django. Уже применил знания Python для
+            автоматизации прикладных задач на текущей работе (работа с COM-port,
+            библиотеки pandas, numpy), а также для личных финансовых расчётов
+            (просчитал и построил графики выгодности для меня некоторых банковских
+            предложений).</p>
+          <p>Увлекаюсь шоссейным велосипедом и велотемой в целом.
+            Хочу попробовать многодневный велотуризм. Кстати, у меня есть
+            <a href="https://www.strava.com/athletes/30194696">аккаунт в Strava</a>,
+            подписывайся! (потребуется VPN)</p>
+          <p>Меня можно найти здесь:</p>
+          <ul>
+          {% for source, link in links.items %}
+              <li><a href="{{ link }}">{{ source }}</a></li>
+          {% endfor %}
+          </ul>
+        </div>
+      </div>
 
-    <p>Меня можно найти здесь:</p>
-    <ul>
-    {% for source, link in links.items %}
-        <li><a href="{{ link }}">{{ source }}</a></li>
-    {% endfor %}
-    </ul>
+
+    </div>
+
 
 {% endblock %}

@@ -102,7 +102,7 @@ class PostFormTests(TestCase):
             'posts:post_detail', kwargs={'post_id': 1}
         ))
         self.assertTrue(Post.objects.filter(
-            text='Обновлённый текст',
+            text=edit_form_data['text'],
             author=self.user_author,
             group=None,
             image='posts/small_upd.gif'
