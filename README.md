@@ -1,7 +1,3 @@
-# hw05_final
-
-[![CI](https://github.com/yandex-praktikum/hw05_final/actions/workflows/python-app.yml/badge.svg?branch=master)](https://github.com/yandex-praktikum/hw05_final/actions/workflows/python-app.yml)
-
 # yaTube
 ## _Социальная сеть блогеров_
 
@@ -18,6 +14,7 @@
 - переход на PostgreSQL
 
 ### Стек технологий
+[![My Skills](https://skillicons.dev/icons?i=python,django,sqlite,bootstrap&theme=light)](https://skillicons.dev)
 - [Python 3.7]
 - [Django 2.2.19]
 - SQLite 3
